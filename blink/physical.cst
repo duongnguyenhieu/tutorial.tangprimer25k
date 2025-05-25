@@ -1,5 +1,5 @@
-IO_LOC "led" E8;
+IO_LOC "led" E8;//(Ready) set Ready as a regular I/O
 IO_PORT "led" IO_TYPE=LVCMOS33;
 
-IO_LOC "clk" E2;
+IO_LOC "clk" E2; //Clk integration with CPU ->set CPU as a regular I/O
 IO_PORT "clk" IO_TYPE=LVCMOS33;
