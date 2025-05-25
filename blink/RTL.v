@@ -8,5 +8,5 @@ module blink (
     always @(posedge clk)
         counter <= counter + 1;
 
-    assign led = counter[26];  // LED nhấp nháy rất chậm, tùy theo tần số clk
+    assign led = counter[26];  
 endmodule
