@@ -1,39 +1,34 @@
 module top_uart_tx (
-    input  wire clk,   // 50 MHz clock từ oscillator ngoài (chân E2)
-    input  wire reset_btn, // Nút nhấn reset, active-high
-    input  wire send_btn,  // Nút nhấn gửi dữ liệu
-    output wire tx         // UART TX ra USB-UART
+    input  wire clk,        // clock 50MHz
+    input  wire reset_btn,  // nút reset
+    output wire tx          // UART TX output
 );
 
-    // -----------------------------
-    // Reset đồng bộ
-    reg [1:0] rst_sync;
-    always @(posedge clk) begin
-        rst_sync <= {rst_sync[0], reset_btn};
-    end
-    wire reset = rst_sync[1]; // reset đồng bộ, active-high
+    // Data cần gửi: ký tự '1' (ASCII 0x31)
+    localparam DATA_BYTE = 8'h31;
 
-    // -----------------------------
-    // Đồng bộ + edge detect cho nút send
-    reg btn_sync0, btn_sync1;
-    always @(posedge clk) begin
-        btn_sync0 <= send_btn;
-        btn_sync1 <= btn_sync0;
-    end
-
-    wire send_pulse = btn_sync0 & ~btn_sync1; // xung 1 clock khi bấm
-
-    // -----------------------------
-    // UART TX instance
+    // Tín hiệu điều khiển
+    reg start;
     wire busy;
+
+    // Khởi động gửi sau khi nhấn reset_btn
+    always @(posedge clk or posedge reset_btn) begin
+        if (reset_btn) begin
+            start <= 1'b1;  // reset -> gửi ngay
+        end else if (busy) begin
+            start <= 1'b0;  // đang bận thì không gửi thêm
+        end
+    end
+
+    // Instance UART TX
     uart_tx #(
-        .CLK_FREQ(50000000),   // Clock 50 MHz
-        .BAUDRATE(9600)        // Baudrate (9600)
+        .CLK_FREQ(50000000),
+        .BAUDRATE(9600)
     ) uart_tx_inst (
         .clk(clk),
-        .reset(reset),
-        .data(8'h31),      // ASCII '1'
-        .start(send_pulse),// start truyền khi bấm nút
+        .reset(reset_btn),   // dùng nút reset luôn
+        .data(DATA_BYTE),
+        .start(start),
         .tx(tx),
         .busy(busy)
     );
